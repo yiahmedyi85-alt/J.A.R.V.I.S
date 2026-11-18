@@ -1,0 +1,43 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="theme-color" content="#080d18">
+<title>JARVIS | AI Assistant</title>
+<style>
+:root{color-scheme:dark;--bg:#080d18;--panel:#0e1727;--line:#1c2b40;--text:#e7edf7;--muted:#8190a7;--blue:#55a9ff;--cyan:#65e0ef}
+*{box-sizing:border-box}body{margin:0;background:radial-gradient(ellipse at 50% -15%,#183251 0,transparent 48%),var(--bg);color:var(--text);font:15px/1.55 Inter,ui-sans-serif,system-ui,-apple-system,Segoe UI,sans-serif;min-height:100vh;display:flex;flex-direction:column}
+header{height:76px;border-bottom:1px solid #ffffff10;display:flex;align-items:center;justify-content:space-between;padding:0 clamp(18px,5vw,64px);background:#080d18b8;backdrop-filter:blur(14px)}
+.brand{display:flex;align-items:center;gap:12px;font-weight:750;letter-spacing:.2em}.mark{width:34px;height:34px;border:1px solid #55a9ff80;border-radius:50%;display:grid;place-items:center;color:var(--cyan);box-shadow:0 0 22px #55a9ff20;font-size:12px}
+.status{font-size:12px;color:#8dddbb;display:flex;align-items:center;gap:8px}.dot{width:7px;height:7px;background:#62d99b;border-radius:50%;box-shadow:0 0 10px #62d99b}
+main{width:min(900px,100%);margin:0 auto;flex:1;display:flex;flex-direction:column;padding:50px 20px 24px}
+.intro{text-align:center;margin:8px 0 34px}.eyebrow{color:var(--cyan);font-size:11px;letter-spacing:.24em;font-weight:700}.intro h1{font-size:clamp(32px,6vw,52px);letter-spacing:.06em;margin:12px 0 6px}.intro p{color:var(--muted);margin:0}
+.chat{flex:1;min-height:300px;display:flex;flex-direction:column;gap:16px;padding:4px 0 20px}
+.msg{max-width:82%;padding:14px 17px;border:1px solid var(--line);border-radius:15px;background:#0e1727;color:#dce6f5;white-space:pre-wrap;overflow-wrap:anywhere}
+.msg.user{align-self:flex-end;background:#10243a;border-color:#285078}.msg.assistant{align-self:flex-start}.label{font-size:10px;letter-spacing:.16em;color:var(--cyan);margin-bottom:5px;font-weight:700}
+.composer{border:1px solid #263b55;background:#0d1726;border-radius:16px;padding:10px;display:flex;gap:10px;box-shadow:0 15px 50px #0005}
+textarea{resize:none;flex:1;background:transparent;border:0;outline:0;color:var(--text);font:inherit;min-height:46px;max-height:150px;padding:11px}
+button{border:0;border-radius:11px;background:linear-gradient(135deg,#3288db,#2367b2);color:white;font-weight:700;padding:0 22px;cursor:pointer;min-width:88px}button:disabled{opacity:.5;cursor:wait}
+.hint{text-align:center;color:#65758d;font-size:11px;margin:12px 0 0}.notice{margin:18px auto 0;max-width:650px;text-align:center;color:#74839a;font-size:11px}
+@media(max-width:600px){main{padding-top:32px}.msg{max-width:94%}header{height:64px}.brand{font-size:13px}button{min-width:65px;padding:0 14px}}
+</style>
+</head>
+<body>
+<header><div class="brand"><span class="mark">J</span><span>J.A.R.V.I.S</span></div><div class="status"><span class="dot"></span> SYSTEM ONLINE</div></header>
+<main>
+<section class="intro"><div class="eyebrow">PERSONAL AI INTERFACE</div><h1>Good to have you here.</h1><p>What can I help you with today?</p></section>
+<section class="chat" id="chat" aria-live="polite"><div class="msg assistant"><div class="label">JARVIS</div>Online and ready. How may I assist you?</div></section>
+<form class="composer" id="form"><textarea id="message" rows="1" maxlength="4000" placeholder="Message JARVIS..." aria-label="Message JARVIS"></textarea><button id="send" type="submit">Send</button></form>
+<p class="hint">Press Enter to send. Shift + Enter for a new line.</p>
+<p class="notice">Public demo. JARVIS can answer questions and help with tasks, but this web version cannot access your device or its files. Please do not submit passwords or sensitive personal information.</p>
+</main>
+<script>
+const form=document.getElementById('form'),input=document.getElementById('message'),chat=document.getElementById('chat'),send=document.getElementById('send');
+const history=[];
+function addMessage(role,text){const box=document.createElement('div');box.className='msg '+role;const label=document.createElement('div');label.className='label';label.textContent=role==='user'?'YOU':'JARVIS';const body=document.createElement('div');body.textContent=text;box.append(label,body);chat.append(box);box.scrollIntoView({behavior:'smooth',block:'end'});return body}
+input.addEventListener('keydown',e=>{if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();form.requestSubmit()}});
+form.addEventListener('submit',async e=>{e.preventDefault();const message=input.value.trim();if(!message||send.disabled)return;addMessage('user',message);input.value='';send.disabled=true;send.textContent='...';const waiting=addMessage('assistant','Connecting...');try{const res=await fetch('/api/chat',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({message,history})});const data=await res.json();if(!res.ok)throw new Error(data.detail||'Request failed');waiting.textContent=data.reply;history.push({role:'user',text:message},{role:'model',text:data.reply});if(history.length>12)history.splice(0,history.length-12)}catch(err){waiting.textContent=err.message||'Connection error. Please try again.'}finally{send.disabled=false;send.textContent='Send';input.focus()}});
+</script>
+</body>
+</html>
